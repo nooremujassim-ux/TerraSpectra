@@ -1,0 +1,36 @@
+project:
+  name: TerraSpectra
+  version: 1.0.0
+  description: Hyperspectral Crop Disease Forecasting
+
+paths:
+  raw_data: data/raw
+  processed_data: data/processed
+  sample_data: data/sample
+  models: models
+  reports: reports
+
+data:
+  image_format: .tif
+  minimum_spectral_bands: 1
+  target_classes:
+    - healthy
+    - stressed
+
+preprocessing:
+  apply_normalization: true
+  apply_pca: true
+  pca_components: 30
+
+training:
+  random_seed: 42
+  test_size: 0.2
+  batch_size: 16
+  epochs: 20
+
+evaluation:
+  metrics:
+    - accuracy
+    - precision
+    - recall
+    - f1_score

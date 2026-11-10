@@ -1,0 +1,15 @@
+numpy
+pandas
+scipy
+scikit-learn
+matplotlib
+seaborn
+jupyter
+ipykernel
+h5py
+rasterio
+Pillow
+opencv-python
+tqdm
+PyYAML
+pytest
