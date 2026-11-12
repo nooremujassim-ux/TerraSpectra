@@ -40,3 +40,8 @@ models/*.pkl
 # OS
 .DS_Store
 Thumbs.db
+
+# Frontend dependencies and build files
+node_modules/
+frontend/dist/
+frontend/.vite/

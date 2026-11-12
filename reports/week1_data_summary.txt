@@ -1,0 +1,38 @@
+TERRASPECTRA - WEEK 1 DATA SUMMARY
+=================================
+
+DATA SOURCE
+-----------
+Synthetic mock hyperspectral dataset.
+Not real satellite imagery or field observations.
+
+IMAGE METADATA
+--------------
+Width: 64
+Height: 64
+Spectral bands: 200
+Data type: float32
+CRS: None
+
+LABEL SUMMARY
+-------------
+Healthy mock pixels: 3520
+Stressed mock pixels: 576
+Total pixels: 4096
+
+PREPROCESSING
+-------------
+Normalization: Completed
+PCA: Completed
+Original spectral bands: 200
+Reduced components: 30
+Output shape: (30, 64, 64)
+Output data type: float32
+All output values finite: True
+
+LIMITATIONS
+-----------
+The dataset and labels are artificially generated.
+They are intended only for pipeline development and testing.
+They do not demonstrate real crop disease detection,
+model accuracy, or disease forecasting.
