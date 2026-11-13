@@ -5,47 +5,79 @@ import { COORDINATE_SYSTEM, OrthographicView } from '@deck.gl/core'
 import { ScatterplotLayer } from '@deck.gl/layers'
 import './App.css'
 
-const DATA_URL = '/crop_sample.json'
-
 function App() {
   const [dataset, setDataset] = useState(null)
+  const [predictions, setPredictions] = useState(null)
+
   const [loadError, setLoadError] = useState('')
+  const [predictionError, setPredictionError] = useState('')
+
+  const [dataMode, setDataMode] = useState('reference')
   const [showHealthy, setShowHealthy] = useState(true)
   const [showStressed, setShowStressed] = useState(true)
   const [viewMode, setViewMode] = useState('all')
 
-  // Load the exported Python dataset.
+  // Load reference labels and CNN predictions independently.
   useEffect(() => {
     let cancelled = false
 
-    fetch(DATA_URL)
-      .then((response) => {
+    async function loadData() {
+      try {
+        const response = await fetch('/crop_sample.json')
+
         if (!response.ok) {
           throw new Error('Unable to load crop_sample.json')
         }
 
-        return response.json()
-      })
-      .then((data) => {
+        const data = await response.json()
+
         if (!cancelled) {
           setDataset(data)
           setLoadError('')
         }
-      })
-      .catch((error) => {
+      } catch (error) {
         if (!cancelled) {
           setLoadError(error.message)
         }
-      })
+      }
+
+      try {
+        const response = await fetch('/cnn_predictions.json')
+
+        if (!response.ok) {
+          throw new Error('Unable to load cnn_predictions.json')
+        }
+
+        const data = await response.json()
+
+        if (!cancelled) {
+          setPredictions(data)
+          setPredictionError('')
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setPredictionError(error.message)
+        }
+      }
+    }
+
+    loadData()
 
     return () => {
       cancelled = true
     }
   }, [])
 
-  const pixelData = useMemo(() => dataset?.pixels ?? [], [dataset])
+  // Select the active data source.
+  const activeData =
+    dataMode === 'predictions' ? predictions : dataset
 
-  // Filter pixels based on the selected classes.
+  const pixelData = useMemo(
+    () => activeData?.pixels ?? [],
+    [activeData]
+  )
+
+  // Filter the selected dataset.
   const filteredPixels = useMemo(() => {
     return pixelData.filter((pixel) => {
       if (pixel.stressed && !showStressed) return false
@@ -54,9 +86,18 @@ function App() {
     })
   }, [pixelData, showHealthy, showStressed])
 
-  const healthyCount = dataset?.healthy_pixels ?? 0
-  const stressedCount = dataset?.stressed_pixels ?? 0
-  const totalPixels = dataset?.total_pixels ?? 0
+  // Calculate metrics according to the active data source.
+  const healthyCount =
+    dataMode === 'predictions'
+      ? predictions?.predicted_healthy_pixels ?? 0
+      : dataset?.healthy_pixels ?? 0
+
+  const stressedCount =
+    dataMode === 'predictions'
+      ? predictions?.predicted_stressed_pixels ?? 0
+      : dataset?.stressed_pixels ?? 0
+
+  const totalPixels = activeData?.total_pixels ?? 0
 
   const stressPercentage =
     totalPixels > 0
@@ -85,7 +126,7 @@ function App() {
       autoHighlight: true,
       highlightColor: [255, 255, 255, 180],
       updateTriggers: {
-        getFillColor: [showHealthy, showStressed],
+        getFillColor: [showHealthy, showStressed, dataMode],
       },
     }),
   ]
@@ -99,6 +140,13 @@ function App() {
     maxZoom: 8,
     pitch: 0,
     bearing: 0,
+  }
+
+  const selectDataMode = (mode) => {
+    setDataMode(mode)
+    setShowHealthy(true)
+    setShowStressed(true)
+    setViewMode('all')
   }
 
   return (
@@ -168,7 +216,9 @@ function App() {
           <div className="topbar-right">
             <div className="live-status">
               <span className="status-dot" />
-              {dataset ? 'DATA LOADED' : 'LOADING DATA'}
+              {dataset && predictions
+                ? 'DATA & MODEL LOADED'
+                : 'LOADING DATA'}
             </div>
 
             <div className="profile-avatar">TS</div>
@@ -181,8 +231,9 @@ function App() {
             <div className="eyebrow">HYPERSPECTRAL ANALYTICS</div>
             <h2>Understand crop conditions through spectral data.</h2>
             <p>
-              Explore pixel-level sample observations and spectral information
-              through an interactive analytics workspace.
+              Explore synthetic hyperspectral reference labels and
+              trained CNN pixel predictions through an interactive
+              analytics workspace.
             </p>
           </div>
 
@@ -198,19 +249,77 @@ function App() {
         {/* Loading and error messages */}
         {loadError && (
           <div className="error-message">
-            <strong>Dataset loading failed</strong>
+            <strong>Reference dataset loading failed</strong>
             <p>{loadError}</p>
             <small>
-              Confirm that crop_sample.json exists inside frontend/public.
+              Confirm crop_sample.json exists inside frontend/public.
             </small>
           </div>
         )}
 
-        {!dataset && !loadError && (
-          <div className="loading-message">
-            Loading hyperspectral sample data...
+        {predictionError && (
+          <div className="error-message">
+            <strong>CNN prediction loading failed</strong>
+            <p>{predictionError}</p>
+            <small>
+              Confirm cnn_predictions.json exists inside frontend/public.
+            </small>
           </div>
         )}
+
+        {!activeData && (
+          <div className="loading-message">
+            Loading hyperspectral data...
+          </div>
+        )}
+
+        {/* Data source selector */}
+        <section className="panel controls-panel" style={{ marginBottom: '22px' }}>
+          <div className="panel-header">
+            <div>
+              <div className="eyebrow">ANALYSIS SOURCE</div>
+              <h3>Choose Data View</h3>
+              <p>Compare reference labels with trained CNN predictions</p>
+            </div>
+          </div>
+
+          <div className="view-options">
+            <button
+              className={
+                dataMode === 'reference'
+                  ? 'view-option selected'
+                  : 'view-option'
+              }
+              onClick={() => selectDataMode('reference')}
+              disabled={!dataset}
+            >
+              Reference Labels
+            </button>
+
+            <button
+              className={
+                dataMode === 'predictions'
+                  ? 'view-option selected'
+                  : 'view-option'
+              }
+              onClick={() => selectDataMode('predictions')}
+              disabled={!predictions}
+            >
+              CNN Predictions
+            </button>
+          </div>
+
+          <div className="control-divider" />
+
+          <div className="dataset-disclaimer">
+            <span>ⓘ</span>
+            <p>
+              {dataMode === 'predictions'
+                ? `Displaying predictions from ${predictions?.model ?? 'the trained model'} using checkpoint ${predictions?.checkpoint ?? '--'}. Classification threshold: ${predictions?.classification_threshold ?? '--'}.`
+                : 'Displaying the original synthetic reference labels generated for pipeline testing.'}
+            </p>
+          </div>
+        </section>
 
         {/* Metrics */}
         <section className="metrics" id="analysis">
@@ -223,7 +332,7 @@ function App() {
               {totalPixels.toLocaleString()}
             </div>
             <div className="metric-description">
-              Pixels in sample image
+              Pixels in active dataset
             </div>
           </div>
 
@@ -236,7 +345,11 @@ function App() {
               {healthyCount.toLocaleString()}
             </div>
             <div className="metric-description">
-              <span className="green-text">Healthy mock class</span>
+              <span className="green-text">
+                {dataMode === 'predictions'
+                  ? 'CNN predicted healthy'
+                  : 'Reference healthy class'}
+              </span>
             </div>
           </div>
 
@@ -249,7 +362,11 @@ function App() {
               {stressedCount.toLocaleString()}
             </div>
             <div className="metric-description">
-              <span className="red-text">Synthetic stressed class</span>
+              <span className="red-text">
+                {dataMode === 'predictions'
+                  ? 'CNN predicted stressed'
+                  : 'Reference stressed class'}
+              </span>
             </div>
           </div>
 
@@ -260,7 +377,7 @@ function App() {
             </div>
             <div className="metric-value">{stressPercentage}%</div>
             <div className="metric-description">
-              Share of synthetic sample pixels
+              Share of active dataset pixels
             </div>
           </div>
         </section>
@@ -271,11 +388,21 @@ function App() {
             <div className="panel-header">
               <div>
                 <div className="eyebrow">SPATIAL EXPLORER</div>
-                <h3>Hyperspectral Pixel Map</h3>
-                <p>Interactive visualization of sample pixel classes</p>
+                <h3>
+                  {dataMode === 'predictions'
+                    ? 'CNN Prediction Map'
+                    : 'Hyperspectral Reference Map'}
+                </h3>
+                <p>
+                  {dataMode === 'predictions'
+                    ? 'Pixel-level classifications generated by the trained CNN'
+                    : 'Interactive visualization of synthetic reference labels'}
+                </p>
               </div>
 
-              <span className="panel-tag">64 × 64 GRID</span>
+              <span className="panel-tag">
+                {metadata?.width ?? 64} × {metadata?.height ?? 64} GRID
+              </span>
             </div>
 
             <div className="map-legend">
@@ -290,21 +417,34 @@ function App() {
             </div>
 
             <div className="map-container">
-              {dataset && (
+              {activeData && (
                 <DeckGL
+                  views={new OrthographicView()}
                   initialViewState={initialViewState}
                   controller={true}
                   layers={layers}
-                  getTooltip={({ object }) =>
-                    object
-                      ? {
-                          text:
-                            `${object.stressed ? 'Stressed' : 'Healthy'} pixel\n` +
-                            `Position: ${object.position.join(', ')}\n` +
-                            `Mean spectral value: ${object.value}`,
-                        }
-                      : null
-                  }
+                  getTooltip={({ object }) => {
+                    if (!object) return null
+
+                    const details = [
+                      `${object.stressed ? 'Stressed' : 'Healthy'} pixel`,
+                      `Position: ${object.position.join(', ')}`,
+                    ]
+
+                    if (dataMode === 'predictions') {
+                      details.push(
+                        `Stressed probability: ${(object.stressed_probability * 100).toFixed(2)}%`
+                      )
+                    } else {
+                      details.push(
+                        `Mean spectral value: ${object.value}`
+                      )
+                    }
+
+                    return {
+                      text: details.join('\n'),
+                    }
+                  }}
                 />
               )}
             </div>
@@ -333,7 +473,11 @@ function App() {
 
               <div className="view-options">
                 <button
-                  className={viewMode === 'all' ? 'view-option selected' : 'view-option'}
+                  className={
+                    viewMode === 'all'
+                      ? 'view-option selected'
+                      : 'view-option'
+                  }
                   onClick={() => {
                     setViewMode('all')
                     setShowHealthy(true)
@@ -344,7 +488,11 @@ function App() {
                 </button>
 
                 <button
-                  className={viewMode === 'healthy' ? 'view-option selected' : 'view-option'}
+                  className={
+                    viewMode === 'healthy'
+                      ? 'view-option selected'
+                      : 'view-option'
+                  }
                   onClick={() => {
                     setViewMode('healthy')
                     setShowHealthy(true)
@@ -355,7 +503,11 @@ function App() {
                 </button>
 
                 <button
-                  className={viewMode === 'stressed' ? 'view-option selected' : 'view-option'}
+                  className={
+                    viewMode === 'stressed'
+                      ? 'view-option selected'
+                      : 'view-option'
+                  }
                   onClick={() => {
                     setViewMode('stressed')
                     setShowHealthy(false)
@@ -417,7 +569,11 @@ function App() {
                 <div
                   className="distribution-fill healthy-fill"
                   style={{
-                    width: `${totalPixels > 0 ? (healthyCount / totalPixels) * 100 : 0}%`,
+                    width: `${
+                      totalPixels > 0
+                        ? (healthyCount / totalPixels) * 100
+                        : 0
+                    }%`,
                   }}
                 />
               </div>
@@ -431,7 +587,11 @@ function App() {
                 <div
                   className="distribution-fill stressed-fill"
                   style={{
-                    width: `${totalPixels > 0 ? (stressedCount / totalPixels) * 100 : 0}%`,
+                    width: `${
+                      totalPixels > 0
+                        ? (stressedCount / totalPixels) * 100
+                        : 0
+                    }%`,
                   }}
                 />
               </div>
@@ -445,7 +605,7 @@ function App() {
                 setViewMode('all')
               }}
             >
-              ↺ Reset Visualization
+              ↻ Reset Visualization
             </button>
           </div>
         </section>
@@ -456,17 +616,21 @@ function App() {
             <div>
               <div className="eyebrow">DATA INFORMATION</div>
               <h3>Dataset Overview</h3>
-              <p>Metadata loaded from the Python preprocessing pipeline</p>
+              <p>
+                Metadata loaded from the Python preprocessing pipeline
+              </p>
             </div>
 
-            <span className="panel-tag">JSON SOURCE</span>
+            <span className="panel-tag">
+              {dataMode === 'predictions' ? 'CNN OUTPUT' : 'JSON SOURCE'}
+            </span>
           </div>
 
           <div className="dataset-grid">
             <div className="dataset-item">
               <span>Dataset Type</span>
               <strong>
-                {dataset?.dataset_type ?? 'Not loaded'}
+                {activeData?.dataset_type ?? 'Not loaded'}
               </strong>
             </div>
 
@@ -494,16 +658,44 @@ function App() {
               <span>Coordinate Reference</span>
               <strong>{metadata?.crs ?? 'Not georeferenced'}</strong>
             </div>
+
+            {dataMode === 'predictions' && (
+              <>
+                <div className="dataset-item">
+                  <span>Model Architecture</span>
+                  <strong>{predictions?.model ?? '--'}</strong>
+                </div>
+
+                <div className="dataset-item">
+                  <span>Checkpoint</span>
+                  <strong>{predictions?.checkpoint ?? '--'}</strong>
+                </div>
+
+                <div className="dataset-item">
+                  <span>Classification Threshold</span>
+                  <strong>
+                    {predictions?.classification_threshold ?? '--'}
+                  </strong>
+                </div>
+
+                <div className="dataset-item">
+                  <span>Inference Device</span>
+                  <strong>{predictions?.metadata?.device ?? '--'}</strong>
+                </div>
+              </>
+            )}
           </div>
 
           <div className="dataset-disclaimer">
             <span>ⓘ</span>
             <p>
-              {dataset?.description ??
-                'Dataset information will appear after loading.'}
-              {' '}This is synthetic mock data created for pipeline testing.
-              It does not represent real crop observations or verified disease
-              conditions.
+              {dataMode === 'predictions'
+                ? predictions?.description
+                : dataset?.description}
+              {' '}
+              This project currently uses synthetic mock data for
+              pipeline testing. Model predictions do not establish
+              real-world crop disease performance.
             </p>
           </div>
         </section>
