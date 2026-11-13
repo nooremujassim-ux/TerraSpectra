@@ -2,39 +2,44 @@
 
 ## 1. Project Overview
 
-TerraSpectra is a Data Science and Machine Learning project focused on hyperspectral crop imagery analysis for identifying crop stress and supporting crop disease-risk assessment.
+TerraSpectra is a Data Science and Machine Learning project focused on hyperspectral crop imagery analysis for identifying crop stress patterns and supporting crop health assessment.
 
-The project aims to develop an end-to-end workflow involving hyperspectral data processing, machine learning, deep learning, model evaluation, geospatial visualization, and API-based inference.
+The project develops an end-to-end workflow involving hyperspectral data loading, preprocessing, spectral analysis, dimensionality reduction, deep learning, model evaluation, and geospatial visualization.
+
+**Important:** The current experiments use clearly labelled synthetic hyperspectral data. Results demonstrate pipeline functionality and do not establish real-world crop disease detection performance.
 
 ## 2. Project Objectives
 
-- Understand and process hyperspectral imagery.
+- Process hyperspectral imagery containing multiple spectral bands.
 - Analyze spectral and spatial characteristics of crop data.
-- Perform data cleaning and exploratory data analysis.
-- Develop machine learning and deep learning models.
-- Evaluate model performance using appropriate metrics.
-- Develop an API for model inference.
-- Visualize crop health and disease-risk information geographically.
+- Perform data validation, preprocessing, and exploratory analysis.
+- Apply Principal Component Analysis (PCA) for dimensionality reduction.
+- Develop a 3D Convolutional Neural Network (3D-CNN).
+- Evaluate classification performance using appropriate metrics.
+- Visualize crop stress patterns using a geospatial dashboard.
+- Develop an API for future model inference.
 
 ## 3. Project Modules
 
-1. Geospatial Data Pipeline
-2. Hyperspectral Data Preprocessing
-3. Deep Learning Model Development
-4. Model Training and Evaluation
-5. FastAPI Inference Backend
-6. Geospatial Visualization Dashboard
+1. Hyperspectral Data Loading
+2. Data Validation and Preprocessing
+3. Spectral Analysis and PCA
+4. 3D-CNN Model Development
+5. Model Training and Evaluation
+6. Spatial Analysis
+7. Geospatial Visualization Dashboard
+8. Future FastAPI Inference Backend
 
 ## 4. Technology Stack
 
 | Component | Technology |
 |---|---|
 | Programming | Python 3.11 |
-| Data Processing | NumPy, Pandas |
-| Geospatial Processing | Rasterio, GDAL |
+| Data Processing | NumPy, Pandas, SciPy |
+| Geospatial Processing | Rasterio |
 | Machine Learning | Scikit-learn |
 | Deep Learning | PyTorch |
-| Backend API | FastAPI |
+| Visualization | Matplotlib, Seaborn, Plotly |
 | Frontend | React |
 | Geospatial Visualization | Deck.gl |
 | Version Control | Git, GitHub |
@@ -44,7 +49,6 @@ The project aims to develop an end-to-end workflow involving hyperspectral data 
 ```text
 TerraSpectra/
 ├── backend/
-│   └── app/
 ├── data/
 │   ├── raw/
 │   ├── processed/
@@ -68,20 +72,134 @@ TerraSpectra/
 
 ## 6. Development Methodology
 
-The project will follow these stages:
+The project follows these stages:
 
 1. Requirement analysis and dataset identification.
-2. Data collection and validation.
-3. Exploratory data analysis.
-4. Hyperspectral preprocessing and feature extraction.
-5. Model development and training.
-6. Model evaluation and validation.
-7. API and visualization development.
-8. Testing and documentation.
+2. Hyperspectral data loading and validation.
+3. Data preprocessing and normalization.
+4. Exploratory data analysis and spectral analysis.
+5. PCA-based dimensionality reduction.
+6. 3D-CNN architecture development.
+7. Model training using training data.
+8. Validation-based threshold selection.
+9. Final evaluation using a reserved test split.
+10. Dashboard development and documentation.
 
-## 7. Evaluation Metrics
+## 7. Current Implementation
 
-Depending on the selected dataset and prediction task, evaluation may include:
+### Hyperspectral Data
+
+- Synthetic hyperspectral GeoTIFF sample.
+- 200 spectral bands.
+- Image dimensions: 64 × 64 pixels.
+- Total pixels: 4,096.
+- Healthy samples: 3,520.
+- Stressed samples: 576.
+
+### Dimensionality Reduction
+
+PCA was applied to the synthetic hyperspectral dataset.
+
+The first 30 principal components explain approximately 87.72% of the variance in the generated sample.
+
+### Deep Learning Model
+
+A 3D Convolutional Neural Network was implemented using PyTorch.
+
+- Input: Hyperspectral spatial patches.
+- Input dimensions per sample: 1 × 200 × 5 × 5.
+- Classes: Healthy (0) and Stressed (1).
+- Training device: CPU.
+- Dataset split: 60% training, 20% validation, 20% testing.
+
+### Final Test Results
+
+| Metric | Result |
+|---|---:|
+| Accuracy | 98.90% |
+| Precision | 94.17% |
+| Recall | 98.26% |
+| F1-score | 96.17% |
+
+Confusion matrix:
+
+```text
+[[698   7]
+ [  2 113]]
+```
+
+The classification threshold was selected using validation data and then applied to the reserved test split.
+
+**Evaluation limitation:** These results are from a synthetic dataset and a random pixel split. Neighbouring spatial patches may overlap between partitions. Therefore, these metrics should not be interpreted as independent spatial validation or real-world crop disease performance.
+
+## 8. Installation and Setup
+
+### Clone the repository
+
+```bash
+git clone https://github.com/nooremujassim-ux/TerraSpectra.git
+cd TerraSpectra
+```
+
+### Create a virtual environment
+
+Windows PowerShell:
+
+```powershell
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+```
+
+### Install dependencies
+
+```powershell
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+For a CPU-only PyTorch installation, use the official CPU wheel index if needed:
+
+```powershell
+python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+```
+
+## 9. Running the Project
+
+Run the preprocessing tests:
+
+```powershell
+python -m pytest -q
+```
+
+Train the 3D-CNN:
+
+```powershell
+python -m src.training.train_cnn
+```
+
+Analyze the validation threshold:
+
+```powershell
+python -m src.training.threshold_analysis
+```
+
+Evaluate the reserved test dataset:
+
+```powershell
+python -m src.training.evaluate_cnn
+```
+
+Run the frontend from the frontend directory:
+
+```powershell
+cd frontend
+npm install
+npm run dev
+```
+
+## 10. Evaluation Metrics
+
+The project uses:
 
 - Accuracy
 - Precision
@@ -89,26 +207,22 @@ Depending on the selected dataset and prediction task, evaluation may include:
 - F1-score
 - Confusion Matrix
 
-## 8. Project Status
+Additional spatial and spectral evaluation experiments are included in the training module.
 
-**Current Phase:** Initial project setup.
+## 11. Research and Validation Policy
 
-Dataset preparation, preprocessing, model development, evaluation, and application integration are planned.
+Synthetic data is used for pipeline development and testing. It is not presented as genuine agricultural observation data.
 
-## 9. Research and Validation Policy
+Real-world crop stress or disease detection claims require suitable field-collected or independently sourced hyperspectral datasets, reliable ground-truth labels, and spatially independent validation.
 
-Model performance and disease forecasting capabilities will only be reported after suitable datasets, experiments, and validation have been completed.
-
-Synthetic or sample data, if used, will be clearly identified and will not be presented as real-world experimental evidence.
-
-## 10. Internship Information
+## 12. Internship Information
 
 **Organization:** Infotact Solutions  
 **Project:** TerraSpectra: Hyperspectral Crop Disease Forecasting  
 **Project Start Date:** 10 November 2026  
 **Project Deadline:** 10 December 2026
 
-## 11. Author
+## 13. Author
 
 **Noor E Mujassim**  
 Data Science and Machine Learning Intern

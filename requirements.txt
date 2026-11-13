@@ -13,3 +13,4 @@ opencv-python
 tqdm
 PyYAML
 pytest
+torch
