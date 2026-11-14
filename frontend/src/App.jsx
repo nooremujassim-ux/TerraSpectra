@@ -8,6 +8,8 @@ import './App.css'
 function App() {
   const [dataset, setDataset] = useState(null)
   const [predictions, setPredictions] = useState(null)
+  const [spatialAnalysis, setSpatialAnalysis] = useState(null)
+  const [spatialAnalysisError, setSpatialAnalysisError] = useState('')
 
   const [loadError, setLoadError] = useState('')
   const [predictionError, setPredictionError] = useState('')
@@ -17,7 +19,7 @@ function App() {
   const [showStressed, setShowStressed] = useState(true)
   const [viewMode, setViewMode] = useState('all')
 
-  // Load reference labels and CNN predictions independently.
+  // Load reference labels and CNN predictions.
   useEffect(() => {
     let cancelled = false
 
@@ -68,6 +70,38 @@ function App() {
     }
   }, [])
 
+  // Load CNN spatial analysis report.
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadSpatialAnalysis() {
+      try {
+        const response = await fetch('/cnn_spatial_analysis.json')
+
+        if (!response.ok) {
+          throw new Error('Unable to load spatial analysis report')
+        }
+
+        const report = await response.json()
+
+        if (!cancelled) {
+          setSpatialAnalysis(report)
+          setSpatialAnalysisError('')
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setSpatialAnalysisError(error.message)
+        }
+      }
+    }
+
+    loadSpatialAnalysis()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   // Select the active data source.
   const activeData =
     dataMode === 'predictions' ? predictions : dataset
@@ -105,7 +139,7 @@ function App() {
       : '0.0'
 
   const metadata = dataset?.metadata
-    // Dynamic analytics based on the active dataset.
+
   const healthyPercentage =
     totalPixels > 0
       ? ((healthyCount / totalPixels) * 100).toFixed(1)
@@ -305,7 +339,10 @@ function App() {
         )}
 
         {/* Data source selector */}
-        <section className="panel controls-panel" style={{ marginBottom: '22px' }}>
+        <section
+          className="panel controls-panel"
+          style={{ marginBottom: '22px' }}
+        >
           <div className="panel-header">
             <div>
               <div className="eyebrow">ANALYSIS SOURCE</div>
@@ -412,101 +449,104 @@ function App() {
             </div>
           </div>
         </section>
+
         {/* Prediction Analytics */}
-<section className="panel analytics-panel">
-  <div className="panel-header">
-    <div>
-      <div className="eyebrow">MODEL INSIGHTS</div>
-      <h3>Pixel Classification Analytics</h3>
-      <p>
-        {dataMode === 'predictions'
-          ? 'Summary of CNN-generated pixel classifications'
-          : 'Summary of synthetic reference classifications'}
-      </p>
-    </div>
+        <section className="panel analytics-panel">
+          <div className="panel-header">
+            <div>
+              <div className="eyebrow">MODEL INSIGHTS</div>
+              <h3>Pixel Classification Analytics</h3>
+              <p>
+                {dataMode === 'predictions'
+                  ? 'Summary of CNN-generated pixel classifications'
+                  : 'Summary of synthetic reference classifications'}
+              </p>
+            </div>
 
-    <span className="panel-tag">LIVE ANALYTICS</span>
-  </div>
+            <span className="panel-tag">LIVE ANALYTICS</span>
+          </div>
 
-  <div className="metrics analytics-metrics">
-    <div className="metric-card">
-      <div className="metric-top">
-        <span className="metric-label">HEALTHY SHARE</span>
-      </div>
-      <div className="metric-value green-text">
-        {healthyPercentage}%
-      </div>
-      <div className="metric-description">
-        {healthyCount.toLocaleString()} pixels classified healthy
-      </div>
-    </div>
+          <div className="metrics analytics-metrics">
+            <div className="metric-card">
+              <div className="metric-top">
+                <span className="metric-label">HEALTHY SHARE</span>
+              </div>
+              <div className="metric-value green-text">
+                {healthyPercentage}%
+              </div>
+              <div className="metric-description">
+                {healthyCount.toLocaleString()} pixels classified healthy
+              </div>
+            </div>
 
-    <div className="metric-card">
-      <div className="metric-top">
-        <span className="metric-label">STRESSED SHARE</span>
-      </div>
-      <div className="metric-value red-text">
-        {stressedPercentage}%
-      </div>
-      <div className="metric-description">
-        {stressedCount.toLocaleString()} pixels classified stressed
-      </div>
-    </div>
+            <div className="metric-card">
+              <div className="metric-top">
+                <span className="metric-label">STRESSED SHARE</span>
+              </div>
+              <div className="metric-value red-text">
+                {stressedPercentage}%
+              </div>
+              <div className="metric-description">
+                {stressedCount.toLocaleString()} pixels classified stressed
+              </div>
+            </div>
 
-    <div className="metric-card">
-      <div className="metric-top">
-        <span className="metric-label">VISIBLE PIXELS</span>
-      </div>
-      <div className="metric-value">
-        {filteredPixels.length.toLocaleString()}
-      </div>
-      <div className="metric-description">
-        {visibleHealthyCount.toLocaleString()} healthy ·{' '}
-        {visibleStressedCount.toLocaleString()} stressed
-      </div>
-    </div>
+            <div className="metric-card">
+              <div className="metric-top">
+                <span className="metric-label">VISIBLE PIXELS</span>
+              </div>
+              <div className="metric-value">
+                {filteredPixels.length.toLocaleString()}
+              </div>
+              <div className="metric-description">
+                {visibleHealthyCount.toLocaleString()} healthy ·{' '}
+                {visibleStressedCount.toLocaleString()} stressed
+              </div>
+            </div>
 
-    <div className="metric-card">
-      <div className="metric-top">
-        <span className="metric-label">AVERAGE STRESS PROBABILITY</span>
-      </div>
-      <div className="metric-value">
-        {averageStressedProbability === null
-          ? '--'
-          : `${averageStressedProbability.toFixed(1)}%`}
-      </div>
-      <div className="metric-description">
-        {dataMode === 'predictions'
-          ? 'Mean CNN stressed-class probability'
-          : 'Available in CNN prediction mode'}
-      </div>
-    </div>
-  </div>
+            <div className="metric-card">
+              <div className="metric-top">
+                <span className="metric-label">
+                  AVERAGE STRESS PROBABILITY
+                </span>
+              </div>
+              <div className="metric-value">
+                {averageStressedProbability === null
+                  ? '--'
+                  : `${averageStressedProbability.toFixed(1)}%`}
+              </div>
+              <div className="metric-description">
+                {dataMode === 'predictions'
+                  ? 'Mean CNN stressed-class probability'
+                  : 'Available in CNN prediction mode'}
+              </div>
+            </div>
+          </div>
 
-  <div className="distribution-row">
-    <span>Healthy distribution</span>
-    <strong>{healthyPercentage}%</strong>
-  </div>
+          <div className="distribution-row">
+            <span>Healthy distribution</span>
+            <strong>{healthyPercentage}%</strong>
+          </div>
 
-  <div className="distribution-track">
-    <div
-      className="distribution-fill healthy-fill"
-      style={{ width: `${healthyPercentage}%` }}
-    />
-  </div>
+          <div className="distribution-track">
+            <div
+              className="distribution-fill healthy-fill"
+              style={{ width: `${healthyPercentage}%` }}
+            />
+          </div>
 
-  <div className="distribution-row">
-    <span>Stressed distribution</span>
-    <strong>{stressedPercentage}%</strong>
-  </div>
+          <div className="distribution-row">
+            <span>Stressed distribution</span>
+            <strong>{stressedPercentage}%</strong>
+          </div>
 
-  <div className="distribution-track">
-    <div
-      className="distribution-fill stressed-fill"
-      style={{ width: `${stressedPercentage}%` }}
-    />
-  </div>
-</section>
+          <div className="distribution-track">
+            <div
+              className="distribution-fill stressed-fill"
+              style={{ width: `${stressedPercentage}%` }}
+            />
+          </div>
+        </section>
 
         {/* Visualization and controls */}
         <section className="analysis-layout" id="visualization">
@@ -735,6 +775,178 @@ function App() {
             </button>
           </div>
         </section>
+
+        {/* CNN Spatial Analysis */}
+        {dataMode === 'predictions' && (
+          <section className="panel analytics-panel spatial-analysis-panel">
+            <div className="panel-header">
+              <div>
+                <div className="eyebrow">SPATIAL INTELLIGENCE</div>
+                <h3>CNN Spatial Analysis</h3>
+                <p>
+                  Connected regions identified from CNN-predicted stressed pixels
+                </p>
+              </div>
+              <span className="panel-tag">REGION ANALYSIS</span>
+            </div>
+
+            {spatialAnalysisError ? (
+              <div className="error-message">
+                <strong>Spatial analysis report unavailable</strong>
+                <p>{spatialAnalysisError}</p>
+                <small>
+                  Confirm cnn_spatial_analysis.json exists inside frontend/public.
+                </small>
+              </div>
+            ) : !spatialAnalysis ? (
+              <p className="metric-description">
+                Loading CNN spatial analysis report...
+              </p>
+            ) : (
+              <>
+                <div className="metrics analytics-metrics spatial-metrics">
+                  <div className="metric-card">
+                    <div className="metric-top">
+                      <span className="metric-label">CONNECTED REGIONS</span>
+                    </div>
+                    <div className="metric-value">
+                      {spatialAnalysis.connected_region_count ??
+                        spatialAnalysis.regions?.length ?? 0}
+                    </div>
+                    <div className="metric-description">
+                      Identified stressed pixel clusters
+                    </div>
+                  </div>
+
+                  <div className="metric-card">
+                    <div className="metric-top">
+                      <span className="metric-label">LARGEST REGION</span>
+                    </div>
+                    <div className="metric-value">
+                      {spatialAnalysis.regions?.length
+                        ? Math.max(
+                            ...spatialAnalysis.regions.map((region) =>
+                              Number(region.pixel_count) || 0
+                            )
+                          ).toLocaleString()
+                        : '0'}
+                    </div>
+                    <div className="metric-description">
+                      Predicted stressed pixels in the largest region
+                    </div>
+                  </div>
+
+                  <div className="metric-card">
+                    <div className="metric-top">
+                      <span className="metric-label">
+                        AVERAGE REGION PROBABILITY
+                      </span>
+                    </div>
+                    <div className="metric-value">
+                      {spatialAnalysis.regions?.length &&
+                      spatialAnalysis.regions.every((region) =>
+                        Number.isFinite(
+                          Number(region.average_stressed_probability)
+                        )
+                      )
+                        ? `${(
+                            spatialAnalysis.regions.reduce(
+                              (sum, region) =>
+                                sum +
+                                Number(region.average_stressed_probability),
+                              0
+                            ) /
+                              spatialAnalysis.regions.length *
+                              100
+                          ).toFixed(1)}%`
+                        : '--'}
+                    </div>
+                    <div className="metric-description">
+                      Mean stressed-class probability across regions
+                    </div>
+                  </div>
+
+                  <div className="metric-card">
+                    <div className="metric-top">
+                      <span className="metric-label">ANALYZED PIXELS</span>
+                    </div>
+                    <div className="metric-value">
+                      {Number(spatialAnalysis.total_pixels ?? 0).toLocaleString()}
+                    </div>
+                    <div className="metric-description">
+                      {Number(
+                        spatialAnalysis.predicted_stressed_pixels ?? 0
+                      ).toLocaleString()}{' '}
+                      predicted stressed pixels
+                    </div>
+                  </div>
+                </div>
+
+                <div className="distribution-row">
+                  <span>Detected region details</span>
+                  <strong>
+                    {spatialAnalysis.regions?.length ?? 0} regions
+                  </strong>
+                </div>
+
+                {spatialAnalysis.regions?.length > 0 ? (
+                  <div className="spatial-region-list">
+                    {spatialAnalysis.regions.map((region) => {
+                      const bounds = region.bounding_box ?? {}
+                      const regionProbability = Number(
+                        region.average_stressed_probability
+                      )
+                      const hasProbability =
+                        Number.isFinite(regionProbability)
+
+                      return (
+                        <div
+                          className="metric-card spatial-region-card"
+                          key={region.region_id}
+                        >
+                          <div className="metric-top">
+                            <span className="metric-label">
+                              REGION {region.region_id}
+                            </span>
+                            <span className="panel-tag">
+                              {Number(
+                                region.pixel_count ?? 0
+                              ).toLocaleString()}{' '}
+                              pixels
+                            </span>
+                          </div>
+
+                          <div className="metric-description">
+                            Mean stressed probability:{' '}
+                            {hasProbability
+                              ? `${(regionProbability * 100).toFixed(1)}%`
+                              : '--'}
+                          </div>
+
+                          <div className="metric-description">
+                            Bounding box: rows {bounds.min_row ?? '--'}–
+                            {bounds.max_row ?? '--'}, columns{' '}
+                            {bounds.min_col ?? '--'}–
+                            {bounds.max_col ?? '--'}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  <p className="metric-description">
+                    No connected stressed regions were identified.
+                  </p>
+                )}
+
+                <p className="metric-description spatial-analysis-note">
+                  These are connected regions in synthetic mock predictions,
+                  not confirmed crop disease outbreaks or real-world acreage estimates.
+                </p>
+              </>
+            )}
+          </section>
+        )}
 
         {/* Dataset information */}
         <section className="panel dataset-panel" id="dataset">
