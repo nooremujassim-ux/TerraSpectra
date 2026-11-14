@@ -105,6 +105,37 @@ function App() {
       : '0.0'
 
   const metadata = dataset?.metadata
+    // Dynamic analytics based on the active dataset.
+  const healthyPercentage =
+    totalPixels > 0
+      ? ((healthyCount / totalPixels) * 100).toFixed(1)
+      : '0.0'
+
+  const stressedPercentage =
+    totalPixels > 0
+      ? ((stressedCount / totalPixels) * 100).toFixed(1)
+      : '0.0'
+
+  const visibleHealthyCount = filteredPixels.filter(
+    (pixel) => !pixel.stressed
+  ).length
+
+  const visibleStressedCount = filteredPixels.filter(
+    (pixel) => pixel.stressed
+  ).length
+
+  const averageStressedProbability = useMemo(() => {
+    if (dataMode !== 'predictions' || !pixelData.length) {
+      return null
+    }
+
+    const totalProbability = pixelData.reduce(
+      (sum, pixel) => sum + pixel.stressed_probability,
+      0
+    )
+
+    return (totalProbability / pixelData.length) * 100
+  }, [dataMode, pixelData])
 
   // Deck.gl pixel visualization.
   const layers = [
@@ -381,6 +412,101 @@ function App() {
             </div>
           </div>
         </section>
+        {/* Prediction Analytics */}
+<section className="panel analytics-panel">
+  <div className="panel-header">
+    <div>
+      <div className="eyebrow">MODEL INSIGHTS</div>
+      <h3>Pixel Classification Analytics</h3>
+      <p>
+        {dataMode === 'predictions'
+          ? 'Summary of CNN-generated pixel classifications'
+          : 'Summary of synthetic reference classifications'}
+      </p>
+    </div>
+
+    <span className="panel-tag">LIVE ANALYTICS</span>
+  </div>
+
+  <div className="metrics analytics-metrics">
+    <div className="metric-card">
+      <div className="metric-top">
+        <span className="metric-label">HEALTHY SHARE</span>
+      </div>
+      <div className="metric-value green-text">
+        {healthyPercentage}%
+      </div>
+      <div className="metric-description">
+        {healthyCount.toLocaleString()} pixels classified healthy
+      </div>
+    </div>
+
+    <div className="metric-card">
+      <div className="metric-top">
+        <span className="metric-label">STRESSED SHARE</span>
+      </div>
+      <div className="metric-value red-text">
+        {stressedPercentage}%
+      </div>
+      <div className="metric-description">
+        {stressedCount.toLocaleString()} pixels classified stressed
+      </div>
+    </div>
+
+    <div className="metric-card">
+      <div className="metric-top">
+        <span className="metric-label">VISIBLE PIXELS</span>
+      </div>
+      <div className="metric-value">
+        {filteredPixels.length.toLocaleString()}
+      </div>
+      <div className="metric-description">
+        {visibleHealthyCount.toLocaleString()} healthy ·{' '}
+        {visibleStressedCount.toLocaleString()} stressed
+      </div>
+    </div>
+
+    <div className="metric-card">
+      <div className="metric-top">
+        <span className="metric-label">AVERAGE STRESS PROBABILITY</span>
+      </div>
+      <div className="metric-value">
+        {averageStressedProbability === null
+          ? '--'
+          : `${averageStressedProbability.toFixed(1)}%`}
+      </div>
+      <div className="metric-description">
+        {dataMode === 'predictions'
+          ? 'Mean CNN stressed-class probability'
+          : 'Available in CNN prediction mode'}
+      </div>
+    </div>
+  </div>
+
+  <div className="distribution-row">
+    <span>Healthy distribution</span>
+    <strong>{healthyPercentage}%</strong>
+  </div>
+
+  <div className="distribution-track">
+    <div
+      className="distribution-fill healthy-fill"
+      style={{ width: `${healthyPercentage}%` }}
+    />
+  </div>
+
+  <div className="distribution-row">
+    <span>Stressed distribution</span>
+    <strong>{stressedPercentage}%</strong>
+  </div>
+
+  <div className="distribution-track">
+    <div
+      className="distribution-fill stressed-fill"
+      style={{ width: `${stressedPercentage}%` }}
+    />
+  </div>
+</section>
 
         {/* Visualization and controls */}
         <section className="analysis-layout" id="visualization">
