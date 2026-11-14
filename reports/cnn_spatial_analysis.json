@@ -1,0 +1,33 @@
+{
+    "dataset_type": "SYNTHETIC_MOCK_DATA_MODEL_PREDICTIONS",
+    "analysis_type": "CNN prediction spatial analysis",
+    "image_dimensions": {
+        "height": 64,
+        "width": 64
+    },
+    "total_pixels": 4096,
+    "predicted_healthy_pixels": 3511,
+    "predicted_stressed_pixels": 585,
+    "predicted_stressed_percentage": 14.28,
+    "average_stressed_probability": 0.483213,
+    "connected_region_count": 1,
+    "connectivity": "8-connected",
+    "regions": [
+        {
+            "region_id": 1,
+            "pixel_count": 585,
+            "average_stressed_probability": 0.587611,
+            "bounding_box": {
+                "min_row": 20,
+                "max_row": 44,
+                "min_col": 20,
+                "max_col": 43
+            }
+        }
+    ],
+    "limitations": [
+        "Analysis uses CNN predictions from synthetic mock data.",
+        "Connected regions are spatial clusters, not confirmed disease outbreaks.",
+        "No real-world crop area or geographic acreage is inferred."
+    ]
+}
