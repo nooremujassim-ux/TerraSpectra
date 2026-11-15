@@ -3,10 +3,15 @@ import pytest
 import torch
 
 from src.models.hyperspectral_vit import HyperspectralViT
+from src.models.hyperspectral_vit_v2 import HyperspectralViTV2
 
 
-def test_vit_output_shape():
-    model = HyperspectralViT()
+@pytest.mark.parametrize(
+    "model_class",
+    [HyperspectralViT, HyperspectralViTV2],
+)
+def test_vit_output_shape(model_class):
+    model = model_class()
     inputs = torch.randn(2, 1, 200, 5, 5)
 
     outputs = model(inputs)
@@ -14,8 +19,12 @@ def test_vit_output_shape():
     assert outputs.shape == (2, 2)
 
 
-def test_vit_supports_single_sample():
-    model = HyperspectralViT()
+@pytest.mark.parametrize(
+    "model_class",
+    [HyperspectralViT, HyperspectralViTV2],
+)
+def test_vit_supports_single_sample(model_class):
+    model = model_class()
     inputs = torch.randn(1, 1, 200, 5, 5)
 
     outputs = model(inputs)
@@ -23,8 +32,12 @@ def test_vit_supports_single_sample():
     assert outputs.shape == (1, 2)
 
 
-def test_vit_runs_on_cpu():
-    model = HyperspectralViT()
+@pytest.mark.parametrize(
+    "model_class",
+    [HyperspectralViT, HyperspectralViTV2],
+)
+def test_vit_runs_on_cpu(model_class):
+    model = model_class()
     inputs = torch.randn(2, 1, 200, 5, 5)
 
     outputs = model(inputs)
@@ -33,24 +46,36 @@ def test_vit_runs_on_cpu():
     assert outputs.device.type == "cpu"
 
 
-def test_vit_rejects_wrong_number_of_bands():
-    model = HyperspectralViT()
+@pytest.mark.parametrize(
+    "model_class",
+    [HyperspectralViT, HyperspectralViTV2],
+)
+def test_vit_rejects_wrong_number_of_bands(model_class):
+    model = model_class()
     inputs = torch.randn(2, 1, 100, 5, 5)
 
     with pytest.raises(ValueError, match="spectral bands"):
         model(inputs)
 
 
-def test_vit_rejects_wrong_spatial_dimensions():
-    model = HyperspectralViT()
+@pytest.mark.parametrize(
+    "model_class",
+    [HyperspectralViT, HyperspectralViTV2],
+)
+def test_vit_rejects_wrong_spatial_dimensions(model_class):
+    model = model_class()
     inputs = torch.randn(2, 1, 200, 7, 7)
 
     with pytest.raises(ValueError, match="spatial dimensions"):
         model(inputs)
 
 
-def test_vit_rejects_invalid_input_dimensions():
-    model = HyperspectralViT()
+@pytest.mark.parametrize(
+    "model_class",
+    [HyperspectralViT, HyperspectralViTV2],
+)
+def test_vit_rejects_invalid_input_dimensions(model_class):
+    model = model_class()
     inputs = torch.randn(2, 200, 5, 5)
 
     with pytest.raises(ValueError, match="Input must have shape"):
