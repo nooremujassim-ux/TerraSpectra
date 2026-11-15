@@ -78,3 +78,42 @@ The spatial ViT achieved an F1-score of 97.61%. Logistic Regression achieved 100
 Both experiments used the same synthetic image and spatial regions. These results are useful for comparing model behavior on this dataset, but they do not establish real-world agricultural performance.
 
 Further evaluation on genuine hyperspectral imagery from independent locations is required.
+## Hybrid 3D-CNN + Vision Transformer (Spatial Holdout)
+
+### Architecture
+- 3D CNN extracts local spectral-spatial features.
+- Vision Transformer models relationships between spatial tokens.
+- Hybrid classifier predicts Healthy and Stressed classes.
+- Total parameters: 78,242.
+
+### Training Configuration
+- Training samples: 2,800
+- Spatial test samples: 1,024
+- Epochs: 10
+- Batch size: 32
+- Optimizer: Adam
+- Learning rate: 0.001
+- Device: CPU
+- Normalization statistics calculated from training pixels only.
+
+### Spatial Test Results
+
+| Metric | Score |
+|---|---:|
+| Accuracy | 1.0000 |
+| Precision | 1.0000 |
+| Recall | 1.0000 |
+| F1-score | 1.0000 |
+
+Confusion Matrix:
+
+| | Predicted Healthy | Predicted Stressed |
+|---|---:|---:|
+| Actual Healthy | 880 | 0 |
+| Actual Stressed | 0 | 144 |
+
+### Limitations
+- Evaluation used synthetic mock hyperspectral data.
+- The test region was excluded from model training.
+- Results represent one spatial holdout from one synthetic scene.
+- These metrics do not establish real-world crop disease detection performance.
