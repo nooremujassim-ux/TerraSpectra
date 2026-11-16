@@ -1,0 +1,10 @@
+TerraSpectra Hybrid Explainability
+=============================================
+Sample index: 2080
+Pixel location: (32, 32)
+Actual class: 1
+Predicted class: 1
+Prediction confidence: 0.9999
+Heatmap shape: (200, 5, 5)
+Data: SYNTHETIC_MOCK_DATA
+Interpretation: Gradient-based model activation, not causal feature importance.
