@@ -1,3 +1,4 @@
+
 # TerraSpectra: Hyperspectral Crop Disease Forecasting
 
 ## 1. Project Overview
@@ -25,10 +26,12 @@ The project develops an end-to-end workflow involving hyperspectral data loading
 2. Data Validation and Preprocessing
 3. Spectral Analysis and PCA
 4. 3D-CNN Model Development
-5. Model Training and Evaluation
-6. Spatial Analysis
-7. Geospatial Visualization Dashboard
-8. Future FastAPI Inference Backend
+5. Hybrid CNN-Transformer Model Development
+6. Model Training and Evaluation
+7. Spatial and Spectral Analysis
+8. Grad-CAM Explainability
+9. Geospatial Visualization Dashboard
+10. Future FastAPI Inference Backend
 
 ## 4. Technology Stack
 
@@ -58,6 +61,7 @@ TerraSpectra/
 ├── models/
 ├── notebooks/
 ├── reports/
+│   └── hybrid_explainability/
 ├── src/
 │   ├── preprocessing/
 │   ├── models/
@@ -80,10 +84,12 @@ The project follows these stages:
 4. Exploratory data analysis and spectral analysis.
 5. PCA-based dimensionality reduction.
 6. 3D-CNN architecture development.
-7. Model training using training data.
-8. Validation-based threshold selection.
-9. Final evaluation using a reserved test split.
-10. Dashboard development and documentation.
+7. Hybrid CNN-Transformer architecture development.
+8. Model training using training data.
+9. Validation-based threshold selection.
+10. Spatial model evaluation.
+11. Grad-CAM explainability analysis.
+12. Dashboard development and documentation.
 
 ## 7. Current Implementation
 
@@ -134,14 +140,14 @@ The classification threshold was selected using validation data and then applied
 
 ## 8. Installation and Setup
 
-### Clone the repository
+### Clone the Repository
 
-```bash
+```powershell
 git clone https://github.com/nooremujassim-ux/TerraSpectra.git
 cd TerraSpectra
 ```
 
-### Create a virtual environment
+### Create a Virtual Environment
 
 Windows PowerShell:
 
@@ -150,7 +156,7 @@ python -m venv .venv
 .venv\Scripts\Activate.ps1
 ```
 
-### Install dependencies
+### Install Dependencies
 
 ```powershell
 python -m pip install --upgrade pip
@@ -165,31 +171,31 @@ python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
 
 ## 9. Running the Project
 
-Run the preprocessing tests:
+### Run the Test Suite
 
 ```powershell
 python -m pytest -q
 ```
 
-Train the 3D-CNN:
+### Train the 3D-CNN
 
 ```powershell
 python -m src.training.train_cnn
 ```
 
-Analyze the validation threshold:
+### Analyze the Validation Threshold
 
 ```powershell
 python -m src.training.threshold_analysis
 ```
 
-Evaluate the reserved test dataset:
+### Evaluate the Reserved Test Dataset
 
 ```powershell
 python -m src.training.evaluate_cnn
 ```
 
-Run the frontend from the frontend directory:
+### Run the Frontend
 
 ```powershell
 cd frontend
@@ -207,7 +213,7 @@ The project uses:
 - F1-score
 - Confusion Matrix
 
-Additional spatial and spectral evaluation experiments are included in the training module.
+Additional spatial and spectral evaluation experiments are included in the training and evaluation modules.
 
 ## 11. Research and Validation Policy
 
@@ -217,12 +223,101 @@ Real-world crop stress or disease detection claims require suitable field-collec
 
 ## 12. Internship Information
 
-**Organization:** Infotact Solutions  
-**Project:** TerraSpectra: Hyperspectral Crop Disease Forecasting  
-**Project Start Date:** 10 November 2026  
+**Organization:** Infotact Solutions
+
+**Project:** TerraSpectra: Hyperspectral Crop Disease Forecasting
+
+**Project Start Date:** 10 November 2026
+
 **Project Deadline:** 10 December 2026
 
 ## 13. Author
 
-**Noor E Mujassim**  
+**Noor E Mujassim**
+
 Data Science and Machine Learning Intern
+
+## 14. Hybrid Model and Explainability
+
+TerraSpectra includes a hybrid CNN-Transformer architecture for hyperspectral spatial-spectral classification.
+
+### Hybrid CNN-Transformer Model
+
+The hybrid model combines:
+
+- 3D CNN layers for local spectral-spatial feature extraction.
+- Transformer encoder layers for feature representation.
+- A classification head for healthy and stressed pixel classification.
+
+**Input dimensions:** 1 × 200 × 5 × 5
+
+**Output classes:** Healthy (0) and Stressed (1)
+
+### Spatial Training and Evaluation
+
+The hybrid model uses spatially separated training and evaluation regions from the synthetic hyperspectral sample.
+
+Run hybrid training:
+
+```powershell
+python -m src.training.train_hybrid
+```
+
+Run spatial evaluation:
+
+```powershell
+python -m src.training.evaluate_hybrid_spatial
+```
+
+### Hybrid Grad-CAM Explainability
+
+A gradient-based explainability module was implemented to inspect the hybrid model's learned activations.
+
+The implementation provides:
+
+1. **3D Grad-CAM heatmap:** Spectral-spatial activation map across 200 bands and a 5 × 5 spatial patch.
+2. **Spectral importance visualization:** Relative activation scores across individual spectral bands.
+3. **Spatial Grad-CAM visualization:** Spatial activation patterns obtained by aggregating across spectral bands.
+4. **Metadata report:** Records sample index, pixel location, actual class, predicted class, prediction confidence, and data limitations.
+
+Generate explainability outputs:
+
+```powershell
+python -m src.evaluation.generate_hybrid_explanations
+```
+
+Generated files are saved in:
+
+```text
+reports/
+└── hybrid_explainability/
+    ├── hybrid_gradcam_3d.npy
+    ├── sample_metadata.txt
+    ├── spatial_gradcam.png
+    ├── spectral_importance.csv
+    └── spectral_importance.png
+```
+
+### Automated Testing
+
+Dedicated tests validate:
+
+- Grad-CAM output dimensions.
+- Finite heatmap values.
+- Heatmap normalization.
+- Explicit target-class support.
+- Removal of registered hooks.
+
+The complete project test suite currently reports **39 passing tests**.
+
+Run all tests:
+
+```powershell
+python -m pytest -v
+```
+
+### Explainability Limitations
+
+Grad-CAM visualizations represent gradient-weighted model activations. Spectral activation scores are not causal feature importance measurements.
+
+The current experiments use synthetic mock hyperspectral data. These visualizations do not establish real-world crop disease detection performance or agricultural reliability.
