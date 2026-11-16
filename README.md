@@ -321,3 +321,27 @@ python -m pytest -v
 Grad-CAM visualizations represent gradient-weighted model activations. Spectral activation scores are not causal feature importance measurements.
 
 The current experiments use synthetic mock hyperspectral data. These visualizations do not establish real-world crop disease detection performance or agricultural reliability.
+## 15. Model Performance Comparison
+
+TerraSpectra evaluates three deep learning models for hyperspectral
+crop stress classification.
+
+### Performance Visualization
+
+![TerraSpectra Model Performance Comparison](reports/figures/model_performance_comparison.png)
+
+### Evaluation Summary
+
+| Model | Evaluation Protocol | Accuracy | Precision | Recall | F1-score |
+|---|---|---:|---:|---:|---:|
+| 3D CNN V2 | Random split | 98.90% | 94.17% | 98.26% | 96.17% |
+| Spatial ViT | Spatial holdout | 99.32% | 95.97% | 99.31% | 97.61% |
+| Hybrid CNN-Transformer | Spatial holdout | 100.00% | 100.00% | 100.00% | 100.00% |
+
+**Important limitations:**
+
+- Experiments use synthetic mock hyperspectral data.
+- The CNN uses a random split, whereas Spatial ViT and Hybrid use spatial holdouts.
+- Test-set sizes and evaluation protocols differ.
+- These results are descriptive, not a controlled head-to-head benchmark.
+- The results do not establish real-world crop disease detection performance.
