@@ -4,8 +4,24 @@ import { DeckGL } from '@deck.gl/react'
 import { COORDINATE_SYSTEM, OrthographicView } from '@deck.gl/core'
 import { ScatterplotLayer } from '@deck.gl/layers'
 import './App.css'
+import ModelEvaluation from './ModelEvaluation'
 
 function App() {
+  const [activeSection, setActiveSection] = useState(
+    window.location.hash || '#overview'
+  )
+
+  useEffect(() => {
+    const updateActiveSection = () => {
+      setActiveSection(window.location.hash || '#overview')
+    }
+
+    window.addEventListener('hashchange', updateActiveSection)
+
+    return () => {
+      window.removeEventListener('hashchange', updateActiveSection)
+    }
+  }, [])
   const [dataset, setDataset] = useState(null)
   const [predictions, setPredictions] = useState(null)
   const [spatialAnalysis, setSpatialAnalysis] = useState(null)
@@ -229,23 +245,28 @@ function App() {
         <div className="sidebar-label">WORKSPACE</div>
 
         <nav className="navigation">
-          <a className="nav-item active" href="#overview">
-            <span>◈</span>
+          <a className={activeSection === '#overview' ? 'nav-item active' : 'nav-item'} href="#overview">
+            <span>D</span>
             Dashboard
           </a>
 
-          <a className="nav-item" href="#analysis">
-            <span>▦</span>
+          <a className={activeSection === '#analysis' ? 'nav-item active' : 'nav-item'} href="#analysis">
+            <span>C</span>
             Crop Analysis
           </a>
 
-          <a className="nav-item" href="#visualization">
-            <span>▧</span>
+          <a className={activeSection === '#visualization' ? 'nav-item active' : 'nav-item'} href="#visualization">
+            <span>S</span>
             Spectral Map
           </a>
 
-          <a className="nav-item" href="#dataset">
-            <span>◫</span>
+          <a className={activeSection === '#evaluation' ? 'nav-item active' : 'nav-item'} href="#evaluation">
+            <span>M</span>
+            Model Evaluation
+          </a>
+
+          <a className={activeSection === '#dataset' ? 'nav-item active' : 'nav-item'} href="#dataset">
+            <span>I</span>
             Dataset Details
           </a>
         </nav>
@@ -303,7 +324,7 @@ function App() {
           </div>
 
           <div className="welcome-badge">
-            <span className="badge-icon">✦</span>
+            <span className="badge-icon">H</span>
             <div>
               <strong>Sample Dataset</strong>
               <small>200 spectral bands</small>
@@ -380,7 +401,7 @@ function App() {
           <div className="control-divider" />
 
           <div className="dataset-disclaimer">
-            <span>ⓘ</span>
+            <span>i</span>
             <p>
               {dataMode === 'predictions'
                 ? `Displaying predictions from ${predictions?.model ?? 'the trained model'} using checkpoint ${predictions?.checkpoint ?? '--'}. Classification threshold: ${predictions?.classification_threshold ?? '--'}.`
@@ -394,7 +415,7 @@ function App() {
           <div className="metric-card">
             <div className="metric-top">
               <span className="metric-label">TOTAL PIXELS</span>
-              <span className="metric-icon purple">▦</span>
+              <span className="metric-icon purple">#</span>
             </div>
             <div className="metric-value">
               {totalPixels.toLocaleString()}
@@ -407,7 +428,7 @@ function App() {
           <div className="metric-card">
             <div className="metric-top">
               <span className="metric-label">HEALTHY PIXELS</span>
-              <span className="metric-icon green">✦</span>
+              <span className="metric-icon green">+</span>
             </div>
             <div className="metric-value">
               {healthyCount.toLocaleString()}
@@ -424,7 +445,7 @@ function App() {
           <div className="metric-card">
             <div className="metric-top">
               <span className="metric-label">STRESSED PIXELS</span>
-              <span className="metric-icon red">△</span>
+              <span className="metric-icon red">!</span>
             </div>
             <div className="metric-value">
               {stressedCount.toLocaleString()}
@@ -441,7 +462,7 @@ function App() {
           <div className="metric-card">
             <div className="metric-top">
               <span className="metric-label">STRESSED SHARE</span>
-              <span className="metric-icon orange">◉</span>
+              <span className="metric-icon orange">%</span>
             </div>
             <div className="metric-value">{stressPercentage}%</div>
             <div className="metric-description">
@@ -499,7 +520,7 @@ function App() {
                 {filteredPixels.length.toLocaleString()}
               </div>
               <div className="metric-description">
-                {visibleHealthyCount.toLocaleString()} healthy ·{' '}
+                {visibleHealthyCount.toLocaleString()} healthy |{' '}
                 {visibleStressedCount.toLocaleString()} stressed
               </div>
             </div>
@@ -567,7 +588,7 @@ function App() {
               </div>
 
               <span className="panel-tag">
-                {metadata?.width ?? 64} × {metadata?.height ?? 64} GRID
+                {metadata?.width ?? 64} x {metadata?.height ?? 64} GRID
               </span>
             </div>
 
@@ -620,7 +641,7 @@ function App() {
                 Displaying {filteredPixels.length.toLocaleString()} of{' '}
                 {totalPixels.toLocaleString()} pixels
               </span>
-              <span>Drag to pan · Scroll to zoom</span>
+              <span>Drag to pan | Scroll to zoom</span>
             </div>
           </div>
 
@@ -771,7 +792,7 @@ function App() {
                 setViewMode('all')
               }}
             >
-              ↻ Reset Visualization
+               Reset Visualization
             </button>
           </div>
         </section>
@@ -924,9 +945,9 @@ function App() {
                           </div>
 
                           <div className="metric-description">
-                            Bounding box: rows {bounds.min_row ?? '--'}–
+                            Bounding box: rows {bounds.min_row ?? '--'}-
                             {bounds.max_row ?? '--'}, columns{' '}
-                            {bounds.min_col ?? '--'}–
+                            {bounds.min_col ?? '--'}-
                             {bounds.max_col ?? '--'}
                           </div>
                         </div>
@@ -947,6 +968,11 @@ function App() {
             )}
           </section>
         )}
+
+        {/* Model Evaluation Center */}
+        <section id="evaluation" className="evaluation-section">
+          <ModelEvaluation />
+        </section>
 
         {/* Dataset information */}
         <section className="panel dataset-panel" id="dataset">
@@ -1025,7 +1051,7 @@ function App() {
           </div>
 
           <div className="dataset-disclaimer">
-            <span>ⓘ</span>
+            <span>i</span>
             <p>
               {dataMode === 'predictions'
                 ? predictions?.description
@@ -1040,8 +1066,8 @@ function App() {
 
         {/* Footer */}
         <footer className="app-footer">
-          <span>TerraSpectra · Hyperspectral Crop Analysis</span>
-          <span>Academic prototype · Synthetic sample data</span>
+          <span>TerraSpectra | Hyperspectral Crop Analysis</span>
+          <span>Academic prototype | Synthetic sample data</span>
         </footer>
       </main>
     </div>

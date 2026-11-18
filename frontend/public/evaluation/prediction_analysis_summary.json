@@ -1,0 +1,134 @@
+{
+    "CNN V2": {
+        "accuracy": 0.9890243902439024,
+        "precision": 0.9416666666666667,
+        "recall": 0.9826086956521739,
+        "f1_score": 0.9617021276595744,
+        "confusion_matrix": [
+            [
+                698,
+                7
+            ],
+            [
+                2,
+                113
+            ]
+        ],
+        "class_order": [
+            "Healthy",
+            "Stressed"
+        ],
+        "total_samples": 820,
+        "actual_class_counts": {
+            "Healthy": 705,
+            "Stressed": 115
+        },
+        "predicted_class_counts": {
+            "Healthy": 700,
+            "Stressed": 120
+        },
+        "evaluation_metadata": {
+            "evaluation_protocol": "Stratified random 60/20/20 split",
+            "random_state": 42,
+            "patch_size": 5,
+            "batch_size": 32,
+            "classification_rule": "Stressed probability >= 0.50",
+            "classification_threshold": 0.5,
+            "training_samples": 2457,
+            "validation_samples": 819,
+            "test_samples": 820,
+            "data_type": "Synthetic mock data",
+            "limitations": [
+                "Random split may allow spatial overlap between patches.",
+                "Results do not establish real-world crop disease performance."
+            ]
+        }
+    },
+    "Spatial ViT": {
+        "accuracy": 0.9931640625,
+        "precision": 0.959731543624161,
+        "recall": 0.9930555555555556,
+        "f1_score": 0.9761092150170648,
+        "confusion_matrix": [
+            [
+                874,
+                6
+            ],
+            [
+                1,
+                143
+            ]
+        ],
+        "class_order": [
+            "Healthy",
+            "Stressed"
+        ],
+        "total_samples": 1024,
+        "actual_class_counts": {
+            "Healthy": 880,
+            "Stressed": 144
+        },
+        "predicted_class_counts": {
+            "Healthy": 875,
+            "Stressed": 149
+        },
+        "evaluation_metadata": {
+            "evaluation_protocol": "Spatial holdout",
+            "test_mask": "rows >= 32 and columns >= 32",
+            "patch_size": 5,
+            "batch_size": 32,
+            "classification_rule": "Argmax over two class probabilities",
+            "training_samples": 2800,
+            "test_samples": 1024,
+            "data_type": "Synthetic mock data",
+            "limitations": [
+                "5x5 patches near the training boundary may overlap the test region.",
+                "Results are not independent real-world validation."
+            ]
+        }
+    },
+    "Hybrid CNN-Transformer": {
+        "accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1_score": 1.0,
+        "confusion_matrix": [
+            [
+                880,
+                0
+            ],
+            [
+                0,
+                144
+            ]
+        ],
+        "class_order": [
+            "Healthy",
+            "Stressed"
+        ],
+        "total_samples": 1024,
+        "actual_class_counts": {
+            "Healthy": 880,
+            "Stressed": 144
+        },
+        "predicted_class_counts": {
+            "Healthy": 880,
+            "Stressed": 144
+        },
+        "evaluation_metadata": {
+            "evaluation_protocol": "Spatial holdout",
+            "training_mask": "rows < 28 or columns < 28",
+            "test_mask": "rows >= 32 and columns >= 32",
+            "patch_size": 5,
+            "batch_size": 32,
+            "classification_rule": "Argmax over two class probabilities",
+            "training_samples": 2800,
+            "test_samples": 1024,
+            "data_type": "Synthetic mock data",
+            "limitations": [
+                "5x5 patches near the training boundary may overlap the test region.",
+                "Results are not independent real-world validation."
+            ]
+        }
+    }
+}
