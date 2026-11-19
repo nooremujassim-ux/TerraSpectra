@@ -345,3 +345,7 @@ crop stress classification.
 - Test-set sizes and evaluation protocols differ.
 - These results are descriptive, not a controlled head-to-head benchmark.
 - The results do not establish real-world crop disease detection performance.
+
+## 16. Detailed Model Evaluation and Scientific Validation
+
+For complete model configurations, confusion matrices, evaluation protocols, spatial split methodology, historical experiments, scientific limitations, and recommended future validation, see the [Model Evaluation and Scientific Validation Report](reports/model_comparison.md).
